@@ -13,12 +13,8 @@ import random
 class MultiviewImgDataset(torch.utils.data.Dataset):
 
     def __init__(self, root_dir, scale_aug=False, rot_aug=False, test_mode=False, \
-                 num_models=0, num_views=12, shuffle=True):
-        self.classnames=['airplane','bathtub','bed','bench','bookshelf','bottle','bowl','car','chair',
-                         'cone','cup','curtain','desk','door','dresser','flower_pot','glass_box',
-                         'guitar','keyboard','lamp','laptop','mantel','monitor','night_stand',
-                         'person','piano','plant','radio','range_hood','sink','sofa','stairs',
-                         'stool','table','tent','toilet','tv_stand','vase','wardrobe','xbox']
+                 num_models=0, num_views=3, shuffle=True):
+        self.classnames=['track', 'shower']
         self.root_dir = root_dir
         self.scale_aug = scale_aug
         self.rot_aug = rot_aug
@@ -31,7 +27,7 @@ class MultiviewImgDataset(torch.utils.data.Dataset):
         for i in range(len(self.classnames)):
             all_files = sorted(glob.glob(parent_dir+'/'+self.classnames[i]+'/'+set_+'/*.png'))
             ## Select subset for different number of views
-            stride = int(12/self.num_views) # 12 6 4 3 2 1
+            stride = int(3/self.num_views) # 12 6 4 3 2 1
             all_files = all_files[::stride]
 
             if num_models == 0:
@@ -87,12 +83,8 @@ class MultiviewImgDataset(torch.utils.data.Dataset):
 class SingleImgDataset(torch.utils.data.Dataset):
 
     def __init__(self, root_dir, scale_aug=False, rot_aug=False, test_mode=False, \
-                 num_models=0, num_views=12):
-        self.classnames=['airplane','bathtub','bed','bench','bookshelf','bottle','bowl','car','chair',
-                         'cone','cup','curtain','desk','door','dresser','flower_pot','glass_box',
-                         'guitar','keyboard','lamp','laptop','mantel','monitor','night_stand',
-                         'person','piano','plant','radio','range_hood','sink','sofa','stairs',
-                         'stool','table','tent','toilet','tv_stand','vase','wardrobe','xbox']
+                 num_models=0, num_views=3):
+        self.classnames=['track', 'shower']
         self.root_dir = root_dir
         self.scale_aug = scale_aug
         self.rot_aug = rot_aug
@@ -102,7 +94,7 @@ class SingleImgDataset(torch.utils.data.Dataset):
         parent_dir = root_dir.rsplit('/',2)[0]
         self.filepaths = []
         for i in range(len(self.classnames)):
-            all_files = sorted(glob.glob(parent_dir+'/'+self.classnames[i]+'/'+set_+'/*shaded*.png'))
+            all_files = sorted(glob.glob(parent_dir+'/'+self.classnames[i]+'/'+set_+'/*.png'))
             if num_models == 0:
                 # Use the whole dataset
                 self.filepaths.extend(all_files)

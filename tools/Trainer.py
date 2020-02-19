@@ -11,7 +11,7 @@ import time
 class ModelNetTrainer(object):
 
     def __init__(self, model, train_loader, val_loader, optimizer, loss_fn, \
-                 model_name, log_dir, num_views=12):
+                 model_name, log_dir, num_views=3):
 
         self.optimizer = optimizer
         self.model = model
@@ -109,8 +109,8 @@ class ModelNetTrainer(object):
         # out_data = None
         # target = None
 
-        wrong_class = np.zeros(40)
-        samples_class = np.zeros(40)
+        wrong_class = np.zeros(2)
+        samples_class = np.zeros(2)
         all_loss = 0
 
         self.model.eval()
@@ -123,7 +123,7 @@ class ModelNetTrainer(object):
         all_pred = []
 
         for _, data in enumerate(self.val_loader, 0):
-
+            print("iterating!")
             if self.model_name == 'mvcnn':
                 N,V,C,H,W = data[1].size()
                 in_data = Variable(data[1]).view(-1,C,H,W).cuda()
