@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 import torchvision.models as models
 from .Model import Model
+import copy
 
 mean = Variable(torch.FloatTensor([0.485, 0.456, 0.406]), requires_grad=False).cuda()
 std = Variable(torch.FloatTensor([0.229, 0.224, 0.225]), requires_grad=False).cuda()
@@ -24,7 +25,7 @@ class SVCNN(Model):
     def __init__(self, name, nclasses=2, pretraining=True, cnn_name='vgg11'):
         super(SVCNN, self).__init__(name)
 
-        self.classnames=['track', 'shower']
+        self.classnames=['Photon', 'Electron']
 
         self.nclasses = nclasses
         self.pretraining = pretraining
@@ -53,6 +54,9 @@ class SVCNN(Model):
             elif self.cnn_name == 'vgg16':
                 self.net_1 = models.vgg16(pretrained=self.pretraining).features
                 self.net_2 = models.vgg16(pretrained=self.pretraining).classifier
+            elif self.cnn_name == 'vgg19':
+                self.net_1 = models.vgg19(pretrained=self.pretraining).features
+                self.net_2 = models.vgg19(pretrained=self.pretraining).classifier
             
             self.net_2._modules['6'] = nn.Linear(4096,40)
 
@@ -66,10 +70,10 @@ class SVCNN(Model):
 
 class MVCNN(Model):
 
-    def __init__(self, name, model, nclasses=2, cnn_name='vgg11', num_views=3):
+    def __init__(self, name, model, nclasses=2, cnn_name='resnet50', num_views=3):
         super(MVCNN, self).__init__(name)
 
-        self.classnames=['track', 'shower']
+        self.classnames=['Photon', 'Electron']
 
         self.nclasses = nclasses
         self.num_views = num_views
@@ -86,7 +90,45 @@ class MVCNN(Model):
             self.net_2 = model.net_2
 
     def forward(self, x):
-        y = self.net_1(x)
-        y = y.view((int(x.shape[0]/self.num_views),self.num_views,y.shape[-3],y.shape[-2],y.shape[-1]))#(8,12,512,7,7)
+        x = x.view(int(x.shape[0]/3),3,x.shape[-3],x.shape[-2],x.shape[-1])
+        y1 = self.net_1(x[:,0,:,:,:])
+        y2 = self.net_1(x[:,1,:,:,:])
+        y3 = self.net_1(x[:,2,:,:,:])
+        y = torch.stack((y1, y2, y3), 1)
+        #y = self.net_1(x)
+        #y = y.view((int(x.shape[0]/self.num_views),self.num_views,y.shape[-3],y.shape[-2],y.shape[-1]))#(8,12,512,7,7)
         return self.net_2(torch.max(y,1)[0].view(y.shape[0],-1))
 
+
+class MVCNN2(Model):
+
+    def __init__(self, name, model, nclasses=2, cnn_name='resnet50', num_views=3):
+        super(MVCNN2, self).__init__(name)
+
+        self.classnames=['Photon', 'Electron']
+
+        self.nclasses = nclasses
+        self.num_views = num_views
+        self.mean = Variable(torch.FloatTensor([0.485, 0.456, 0.406]), requires_grad=False).cuda()
+        self.std = Variable(torch.FloatTensor([0.229, 0.224, 0.225]), requires_grad=False).cuda()
+
+        self.use_resnet = cnn_name.startswith('resnet')
+
+        if self.use_resnet:
+            self.net_1 = nn.Sequential(*list(model.net.children())[:-1])
+            self.net_2 = model.net.fc
+        else:
+            self.net_1 = copy.deepcopy(model.net_1)
+            self.net_2 = copy.deepcopy(model.net_1)
+            self.net_3 = copy.deepcopy(model.net_1)
+            self.net_4 = model.net_2
+
+    def forward(self, x):
+        x = x.view(int(x.shape[0]/3),3,x.shape[-3],x.shape[-2],x.shape[-1])
+        y1 = self.net_1(x[:,0,:,:,:])
+        y2 = self.net_2(x[:,1,:,:,:])
+        y3 = self.net_3(x[:,2,:,:,:])
+        y = torch.stack((y1, y2, y3), 1)
+        #y = self.net_1(x)
+        #y = y.view((int(x.shape[0]/self.num_views),self.num_views,y.shape[-3],y.shape[-2],y.shape[-1]))#(8,12,512,7,7)
+        return self.net_4(torch.max(y,1)[0].view(y.shape[0],-1))

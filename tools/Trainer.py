@@ -123,7 +123,7 @@ class ModelNetTrainer(object):
         all_pred = []
 
         for _, data in enumerate(self.val_loader, 0):
-            print("iterating!")
+            print("Validating! (%s)" % (_+1))
             if self.model_name == 'mvcnn':
                 N,V,C,H,W = data[1].size()
                 in_data = Variable(data[1]).view(-1,C,H,W).cuda()
@@ -158,4 +158,5 @@ class ModelNetTrainer(object):
         self.model.train()
 
         return loss, val_overall_acc, val_mean_class_acc
+
 

@@ -14,7 +14,7 @@ class MultiviewImgDataset(torch.utils.data.Dataset):
 
     def __init__(self, root_dir, scale_aug=False, rot_aug=False, test_mode=False, \
                  num_models=0, num_views=3, shuffle=True):
-        self.classnames=['track', 'shower']
+        self.classnames=['Photon', 'Electron']
         self.root_dir = root_dir
         self.scale_aug = scale_aug
         self.rot_aug = rot_aug
@@ -84,7 +84,7 @@ class SingleImgDataset(torch.utils.data.Dataset):
 
     def __init__(self, root_dir, scale_aug=False, rot_aug=False, test_mode=False, \
                  num_models=0, num_views=3):
-        self.classnames=['track', 'shower']
+        self.classnames=['Photon', 'Electron']
         self.root_dir = root_dir
         self.scale_aug = scale_aug
         self.rot_aug = rot_aug
